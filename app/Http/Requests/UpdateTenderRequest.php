@@ -27,6 +27,7 @@ class UpdateTenderRequest extends FormRequest
             'location' => 'sometimes|string|max:255',
             'deadline' => 'sometimes|date|after:now',
             'budget' => 'sometimes|numeric|min:0',
+            'is_urgent' => 'sometimes|boolean',
             'status' => 'sometimes|in:draft,published,closed,awarded',
             'boq_items' => 'sometimes|array',
             'boq_items.*.description' => 'required_with:boq_items|string',

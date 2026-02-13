@@ -18,6 +18,7 @@ class BidItemResource extends JsonResource
             'id' => $this->id,
             'boq_item_id' => $this->boq_item_id,
             'unit_price' => (float) $this->unit_price,
+            'quantity' => (float) $this->quantity,
             'total_price' => (float) $this->total_price,
             'notes' => $this->notes,
             

@@ -8,7 +8,10 @@ use App\Http\Resources\BidResource;
 use App\Models\Bid;
 use App\Models\BoqItem;
 use App\Models\Tender;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification as NotificationFacade;
+use Illuminate\Notifications\Messages\DatabaseMessage;
 // use Illuminate\Support\Facades\DB; // Removed DB facade usage
 
 class BidController extends Controller
@@ -92,6 +95,11 @@ class BidController extends Controller
             }
         }
 
+        // Update proposal if provided
+        if ($request->has('proposal')) {
+            $bid->update(['proposal' => $request->input('proposal')]);
+        }
+
         // Insert bid items and calculate total
         if ($request->has('items')) {
             foreach ($request->items as $item) {
@@ -128,6 +136,13 @@ class BidController extends Controller
 
         $bid->submit();
 
+        // Notify admin about new bid submission
+        $tender = $bid->tender;
+        $admin = User::where('role', 'admin')->where('id', $tender->created_by)->first();
+        if ($admin) {
+            $admin->notify(new \App\Notifications\BidSubmittedNotification($bid));
+        }
+
         return new BidResource($bid);
     }
 
@@ -141,6 +156,27 @@ class BidController extends Controller
 
         $tender->award($bid->id);
 
+        // Notify contractor about award
+        $contractor = $bid->contractor;
+        if ($contractor) {
+            $contractor->notify(new \App\Notifications\BidAwardedNotification($bid));
+        }
+
         return response()->json(['message' => 'Tender awarded successfully']);
+    }
+    /**
+     * Get a single bid details (admin/owner/contractor who owns it)
+     */
+    public function show($id)
+    {
+        $bid = Bid::with(['contractor', 'bidItems.boqItem', 'tender'])->findOrFail($id);
+        
+        // Authorization check (basic)
+        $user = request()->user();
+        if ($user->role === 'contractor' && $bid->contractor_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        return new BidResource($bid);
     }
 }

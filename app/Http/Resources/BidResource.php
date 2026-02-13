@@ -38,8 +38,10 @@ class BidResource extends JsonResource
             'tender_deadline' => $this->when(isset($this->tender_deadline), $this->tender_deadline),
             'tender_status' => $this->when(isset($this->tender_status), $this->tender_status),
             
+            
             'offer_file_url' => $this->offer_file_path ? \Illuminate\Support\Facades\Storage::url($this->offer_file_path) : null,
             'offer_file_name' => $this->offer_file_name,
+            'proposal' => $this->proposal,
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];

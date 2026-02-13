@@ -11,8 +11,19 @@ class PdfExtractionService
     
     public function __construct(AIProviderInterface $aiProvider = null)
     {
-        // Use mock provider if none specified or if AI is not configured
-        $this->aiProvider = $aiProvider ?? new MockAIProvider();
+        // Use provided instance, or check config for real vs mock
+        if ($aiProvider) {
+            $this->aiProvider = $aiProvider;
+        } else {
+            $provider = env('AI_PROVIDER', 'mock');
+            if ($provider === 'openai') {
+                $this->aiProvider = new OpenAIProvider();
+            } else if ($provider === 'gemini') {
+                $this->aiProvider = new GeminiProvider();
+            } else {
+                $this->aiProvider = new MockAIProvider();
+            }
+        }
     }
     
     /**
@@ -24,7 +35,7 @@ class PdfExtractionService
      * @param string $extractionType
      * @return int PDF extraction ID
      */
-    public function startExtraction(int $documentId, int $tenderId, string $filePath, string $extractionType = 'standard'): int
+    public function startExtraction(int $documentId, ?int $tenderId, string $filePath, string $extractionType = 'standard'): int
     {
         // Create extraction record
         $extractionId = DB::table('pdf_extractions')->insertGetId([
@@ -79,12 +90,12 @@ class PdfExtractionService
                         'updated_at' => now(),
                     ]);
                 
-                // Optionally auto-create BOQ items from extracted data
-                if (isset($result['data']['boq_items'])) {
+                // Auto-create BOQ items ONLY if NOT a bid import
+                if (isset($result['data']['boq_items']) && $extraction->extraction_type !== 'bid_import') {
                     $this->createBoqItemsFromExtraction($extraction->tender_id, $result['data']['boq_items']);
                 }
                 
-                Log::info("PDF extraction completed", ['extraction_id' => $extractionId]);
+                Log::info("PDF extraction completed", ['extraction_id' => $extractionId, 'type' => $extraction->extraction_type]);
             } else {
                 throw new \Exception($result['error'] ?? 'Extraction failed');
             }
@@ -116,8 +127,12 @@ class PdfExtractionService
      * @param array $boqItems
      * @return void
      */
-    protected function createBoqItemsFromExtraction(int $tenderId, array $boqItems): void
+    protected function createBoqItemsFromExtraction(?int $tenderId, array $boqItems): void
     {
+        if (!$tenderId) {
+            Log::info("Skipping BOQ item creation: no tender_id provided");
+            return;
+        }
         foreach ($boqItems as $index => $item) {
             DB::table('boq_items')->insert([
                 'tender_id' => $tenderId,

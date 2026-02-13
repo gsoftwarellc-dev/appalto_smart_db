@@ -22,11 +22,11 @@ class PdfExtractionController extends Controller
     /**
      * Upload PDF and start extraction
      */
-    public function uploadAndExtract(Request $request, $tenderId)
+    public function uploadAndExtract(Request $request, $tenderId = null)
     {
         $request->validate([
             'pdf_file' => 'required|file|mimes:pdf|max:10240', // Max 10MB
-            'extraction_type' => 'string|in:standard,detailed,quick',
+            'extraction_type' => 'string|in:standard,detailed,quick,bid_import',
         ]);
         
         try {
@@ -40,12 +40,12 @@ class PdfExtractionController extends Controller
             $document = Document::create([
                 'tender_id' => $tenderId,
                 'document_type' => 'boq_pdf',
-                'filename' => $fileName,
+                'file_name' => $fileName,
                 'original_filename' => $file->getClientOriginalName(),
                 'file_path' => $filePath,
                 'file_size' => $file->getSize(),
                 'mime_type' => $file->getMimeType(),
-                'uploaded_by' => $request->user()->id,
+                'user_id' => $request->user()->id,
             ]);
             
             // Start extraction process
@@ -57,8 +57,8 @@ class PdfExtractionController extends Controller
                 $extractionType
             );
             
-            // Dispatch background job
-            ProcessPdfExtraction::dispatch($extractionId, $absolutePath);
+            // Process immediately (synchronous)
+            $this->extractionService->processExtraction($extractionId, $absolutePath);
             
             return response()->json([
                 'message' => 'PDF uploaded successfully. Extraction started.',

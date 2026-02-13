@@ -28,6 +28,7 @@ class StoreTenderRequest extends FormRequest
             'location' => 'required|string|max:255',
             'deadline' => 'required|date|after:now',
             'budget' => 'required|numeric|min:0',
+            'is_urgent' => 'sometimes|boolean',
             'boq_items' => 'sometimes|array',
             'boq_items.*.description' => 'required_with:boq_items|string',
             'boq_items.*.unit' => 'required_with:boq_items|string|max:50',

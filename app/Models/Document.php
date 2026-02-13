@@ -18,6 +18,7 @@ class Document extends Model
         'mime_type',
         'document_type',
         'user_id',
+        'original_filename',
     ];
 
     protected $casts = [

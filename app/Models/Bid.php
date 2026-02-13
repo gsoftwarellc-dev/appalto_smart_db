@@ -17,6 +17,7 @@ class Bid extends Model
         'submitted_at',
         'offer_file_path',
         'offer_file_name',
+        'proposal',
     ];
 
     protected $casts = [

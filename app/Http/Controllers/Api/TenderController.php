@@ -145,8 +145,9 @@ class TenderController extends Controller
                 'location' => $request->location,
                 'deadline' => $request->deadline,
                 'budget' => $request->budget,
-                'status' => 'draft',
+                'status' => 'published',
                 'created_by' => $request->user()->id,
+                'is_urgent' => $request->boolean('is_urgent', false),
             ]);
 
             if ($request->has('boq_items')) {
@@ -201,6 +202,11 @@ class TenderController extends Controller
         
         DB::transaction(function () use ($tender, $request) {
             $tender->update($request->validated());
+            
+            if ($request->has('is_urgent')) {
+                $tender->is_urgent = $request->boolean('is_urgent');
+                $tender->save();
+            }
 
             if ($request->has('boq_items')) {
                 // Delete existing items and recreate

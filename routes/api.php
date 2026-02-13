@@ -52,6 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
         
         // Bid Management
         Route::get('/tenders/{id}/bids', [BidController::class, 'forTender']);
+        Route::get('/bids/{id}', [BidController::class, 'show']);
         Route::post('/bids/{id}/award', [BidController::class, 'award']);
         
         // Document Management
@@ -66,6 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
         
         // PDF Extraction
         Route::post('/tenders/{id}/extract-pdf', [PdfExtractionController::class, 'uploadAndExtract']);
+        Route::post('/extract-pdf', [PdfExtractionController::class, 'uploadAndExtract']);
         Route::get('/extractions/{id}', [PdfExtractionController::class, 'getStatus']);
         Route::get('/tenders/{id}/extractions', [PdfExtractionController::class, 'getTenderExtractions']);
     });
@@ -88,6 +90,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Document History
         Route::get('/contractor/documents', [DocumentController::class, 'history']);
+
+        // AI Scan
+        Route::post('/contractor/ai-scan', [\App\Http\Controllers\Api\Contractor\AiScanController::class, 'scan']);
     });
 
     // Owner Routes
@@ -98,6 +103,26 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/owner/users/{id}/status', [\App\Http\Controllers\Api\UserController::class, 'updateStatus']);
         Route::put('/owner/users/{id}/verify', [\App\Http\Controllers\Api\UserController::class, 'verify']);
         Route::get('/owner/statistics', [\App\Http\Controllers\Api\UserController::class, 'statistics']);
+        
+        // Owner Dashboard & Analytics
+        Route::get('/owner/dashboard', [\App\Http\Controllers\Api\Owner\DashboardController::class, 'index']);
+        Route::get('/owner/revenue', [\App\Http\Controllers\Api\Owner\DashboardController::class, 'revenue']);
+
+        // Audit Logs
+        Route::get('/owner/audit-logs', [\App\Http\Controllers\Api\Owner\AuditLogController::class, 'index']);
+
+        // System Config
+        Route::get('/owner/config', [\App\Http\Controllers\Api\Owner\SystemConfigController::class, 'index']);
+        Route::post('/owner/config', [\App\Http\Controllers\Api\Owner\SystemConfigController::class, 'update']);
+
+        // User Management
+        Route::get('/owner/users/{id}', [\App\Http\Controllers\Api\Owner\UserController::class, 'show']);
+        Route::put('/owner/users/{id}/suspend', [\App\Http\Controllers\Api\Owner\UserController::class, 'suspend']);
+        Route::put('/owner/users/{id}/activate', [\App\Http\Controllers\Api\Owner\UserController::class, 'activate']);
+
+        // Notification Templates
+        Route::get('/owner/notifications', [\App\Http\Controllers\Api\Owner\NotificationTemplateController::class, 'index']);
+        Route::put('/owner/notifications/{id}', [\App\Http\Controllers\Api\Owner\NotificationTemplateController::class, 'update']);
     });
 
     // Shared Routes (with internal authorization checks)

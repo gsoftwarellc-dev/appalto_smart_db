@@ -19,12 +19,14 @@ class Tender extends Model
         'awarded_bid_id',
         'awarded_date',
         'created_by',
+        'is_urgent',
     ];
 
     protected $casts = [
         'deadline' => 'datetime',
         'awarded_date' => 'datetime',
         'budget' => 'decimal:2',
+        'is_urgent' => 'boolean',
     ];
 
     // Relationships

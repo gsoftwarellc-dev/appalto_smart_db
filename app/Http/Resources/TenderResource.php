@@ -27,6 +27,7 @@ class TenderResource extends JsonResource
             
             // Include BOQ items if loaded
             'boqItems' => BoqItemResource::collection($this->whenLoaded('boqItems')),
+            'boq_items' => BoqItemResource::collection($this->whenLoaded('boqItems')), // snake_case alias for frontend compatibility
             
             // Include bids count if available
             'bids_count' => $this->when(isset($this->bids_count), $this->bids_count ?? 0),

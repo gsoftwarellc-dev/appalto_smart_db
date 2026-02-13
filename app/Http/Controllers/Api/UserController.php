@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -14,7 +15,7 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::query()->with('credits');
 
         // Filter by role
         if ($request->has('role')) {
@@ -79,6 +80,14 @@ class UserController extends Controller
         $user->status = $request->status;
         $user->save();
 
+        // Log action
+        AuditLog::create([
+            'user_id' => $request->user()->id,
+            'action' => 'User Status Update',
+            'details' => "Updated user status to {$request->status}: {$user->name} ({$user->role})",
+            'ip_address' => $request->ip()
+        ]);
+
         return response()->json([
             'message' => 'User status updated successfully',
             'user' => $user
@@ -101,6 +110,14 @@ class UserController extends Controller
         $user->verified = true;
         $user->status = 'active';
         $user->save();
+
+        // Log action
+        AuditLog::create([
+            'user_id' => $request->user()->id,
+            'action' => 'Contractor Verification',
+            'details' => "Verified contractor: {$user->name}",
+            'ip_address' => $request->ip()
+        ]);
 
         return response()->json([
             'message' => 'Contractor verified successfully',
